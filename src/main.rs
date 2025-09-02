@@ -8,66 +8,8 @@ use winit::{
     window::{Window, WindowId},
 };
 
-#[derive(Debug, Clone, Copy)]
-struct Vec4 {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-    pub a: f32,
-}
-
-impl Vec4 {
-    pub fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
-        Self { r, g, b, a }
-    }
-
-    pub fn black() -> Self {
-        Self::new(0.0, 0.0, 0.0, 1.0)
-    }
-
-    pub fn white() -> Self {
-        Self::new(1.0, 1.0, 1.0, 1.0)
-    }
-
-    pub fn pink() -> Self {
-        Self::new(1.0, 0.0, 1.0, 1.0)
-    }
-
-    pub fn blue() -> Self {
-        Self::new(0.0, 0.0, 1.0, 1.0)
-    }
-
-    pub fn green() -> Self {
-        Self::new(0.0, 1.0, 0.0, 1.0)
-    }
-
-    pub fn yellow() -> Self {
-        Self::new(1.0, 1.0, 0.0, 1.0)
-    }
-
-    pub fn red() -> Self {
-        Self::new(1.0, 0.0, 0.0, 1.0)
-    }
-
-    fn to_argb(&self) -> u32 {
-        let a = (self.a.clamp(0.0, 1.0) * 255.0) as u32;
-        let r = (self.r.clamp(0.0, 1.0) * 255.0) as u32;
-        let g = (self.g.clamp(0.0, 1.0) * 255.0) as u32;
-        let b = (self.b.clamp(0.0, 1.0) * 255.0) as u32;
-
-        (a << 24) | (r << 16) | (g << 8) | b
-    }
-}
-
-impl std::fmt::Display for Vec4 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Vec4(r: {:.3}, g: {:.3}, b: {:.3}, a: {:.3})",
-            self.r, self.g, self.b, self.a
-        )
-    }
-}
+mod vec4;
+use vec4::Vec4;
 
 // Configuration constants
 const ENABLE_FPS_LIMIT: bool = true;
@@ -119,7 +61,7 @@ impl ApplicationHandler for App {
                         .with_title("Salmon RS")
                         .with_inner_size(winit::dpi::LogicalSize::new(
                             INTENDED_SIZE.0,
-                            INTENDED_SIZE.1,
+                            INTENDED_SIZE.1 + 35,
                         )),
                 )
                 .unwrap(),
@@ -250,6 +192,8 @@ impl App {
                     new_inner_size.width, new_inner_size.height
                 );
 
+                self.current_size = Some((new_inner_size.width, new_inner_size.height));
+
                 // // For the purpose of this example, we need the inner size to be square.
                 // debug_assert!(inner_size.width == inner_size.height);
             }
@@ -268,7 +212,7 @@ impl App {
         }
     }
 
-    fn set_block_line(&mut self, x1: u32, y1: u32, x2: u32, y2: u32, color: Vec4) {
+    fn set_block_line_1(&mut self, x1: u32, y1: u32, x2: u32, y2: u32, color: Vec4) {
         let step_size = 0.02_f32;
 
         let steps = (1.0 / step_size) as usize;
@@ -281,8 +225,14 @@ impl App {
             let y = (y1 as f32 + dy).round() as i32;
             self.set_block(x as u32, y as u32, color);
         }
+    }
 
-        // translate the above cpp to rust
+    fn set_block_line_2a(&mut self, x1: u32, y1: u32, x2: u32, y2: u32, color: Vec4) {
+        for x in x1..=x2 {
+            let t = (x - x1) as f32 / (x2 - x1) as f32;
+            let y = (y1 as f32 + (y2 - y1) as f32 * t).round() as u32;
+            self.set_block(x, y, color);
+        }
     }
 
     fn set_pixel(&mut self, x: u32, y: u32, color: Vec4) {
@@ -345,10 +295,10 @@ impl App {
         let (bx, by) = (12, 37);
         let (cx, cy) = (62, 53);
 
-        self.set_block_line(ax, ay, bx, by, Vec4::blue());
-        self.set_block_line(cx, cy, bx, by, Vec4::green());
-        self.set_block_line(cx, cy, ax, ay, Vec4::yellow());
-        self.set_block_line(ax, ay, cx, cy, Vec4::red());
+        self.set_block_line_2a(ax, ay, bx, by, Vec4::blue());
+        self.set_block_line_2a(cx, cy, bx, by, Vec4::green());
+        self.set_block_line_2a(cx, cy, ax, ay, Vec4::yellow());
+        self.set_block_line_2a(ax, ay, cx, cy, Vec4::red());
 
         self.end_frame();
     }
