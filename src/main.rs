@@ -119,8 +119,7 @@ impl ApplicationHandler for App {
                         .with_title("Salmon RS")
                         .with_inner_size(winit::dpi::LogicalSize::new(
                             INTENDED_SIZE.0,
-                            // The title bar is roughly 35 pixels tall
-                            INTENDED_SIZE.1 + 35,
+                            INTENDED_SIZE.1,
                         )),
                 )
                 .unwrap(),
@@ -234,20 +233,21 @@ impl App {
             let size = window.inner_size();
             let current_size = (size.width, size.height);
 
-            if self.current_size != Some(current_size) {
+            if self.current_size != Some(current_size) || INTENDED_SIZE != current_size {
                 surface
                     .resize(
                         NonZeroU32::new(size.width).unwrap(),
                         NonZeroU32::new(size.height).unwrap(),
                     )
                     .unwrap();
-                self.current_size = Some(current_size);
 
-                println!("Resized surface to: {}x{}", size.width, size.height);
-                let inner_size = window.inner_size();
+                let new_inner_size = window.inner_size();
+                self.current_size = Some((new_inner_size.width, new_inner_size.height));
+
+                println!("Resized surface to: {}x{}", current_size.0, current_size.1);
                 println!(
                     "Window inner size: {}x{}",
-                    inner_size.width, inner_size.height
+                    new_inner_size.width, new_inner_size.height
                 );
 
                 // // For the purpose of this example, we need the inner size to be square.
