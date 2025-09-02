@@ -1,0 +1,42 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'salmon_rs'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=salmon_rs",
+                    "--package=salmon_rs"
+                ],
+                "filter": {
+                    "name": "salmon_rs",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'salmon_rs'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=salmon_rs",
+                    "--package=salmon_rs"
+                ],
+                "filter": {
+                    "name": "salmon_rs",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+
+[target.x86_64-unknown-linux-gnu]
+# Alternative linkers for faster linking
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+# Faster compilation for development builds
+[profile.dev]
+opt-level = 1
+debug = true
+split-debuginfo = "unpacked"
+
+# Faster compilation for dependencies
+[profile.dev.package."*"]
+opt-level = 3
