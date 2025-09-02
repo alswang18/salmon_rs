@@ -6,10 +6,6 @@ rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 # Faster compilation for development builds
 [profile.dev]
-opt-level = 1
+opt-level = 0
 debug = true
 split-debuginfo = "unpacked"
-
-# Faster compilation for dependencies
-[profile.dev.package."*"]
-opt-level = 3
