@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 winit = "0.30"
 softbuffer = "0.4"
+anyhow = "1.0"
