@@ -50,29 +50,31 @@ impl SoftwareCanvas {
     }
 
     pub fn set_pixel(&mut self, x: u32, y: u32, color: Vec4) {
-        if x < self.canvas_size.0 && y < self.canvas_size.1 {
-            if let Some(surface) = &mut self.surface {
-                if let Ok(mut buffer) = surface.buffer_mut() {
-                    let scale_x = self.window_size.0 as f32 / self.canvas_size.0 as f32;
-                    let scale_y = self.window_size.1 as f32 / self.canvas_size.1 as f32;
+        if x >= self.canvas_size.0 || y >= self.canvas_size.1 {
+            return;
+        }
 
-                    // Calculate the range of surface pixels this canvas pixel covers
-                    let start_x = (x as f32 * scale_x) as u32;
-                    let end_x = ((x + 1) as f32 * scale_x) as u32;
-                    let start_y = (y as f32 * scale_y) as u32;
-                    let end_y = ((y + 1) as f32 * scale_y) as u32;
+        if let Some(surface) = &mut self.surface {
+            if let Ok(mut buffer) = surface.buffer_mut() {
+                let scale_x = self.window_size.0 as f32 / self.canvas_size.0 as f32;
+                let scale_y = self.window_size.1 as f32 / self.canvas_size.1 as f32;
 
-                    let argb_color = color.to_argb();
+                // Calculate the range of surface pixels this canvas pixel covers
+                let start_x = (x as f32 * scale_x) as u32;
+                let end_x = ((x + 1) as f32 * scale_x) as u32;
+                let start_y = (y as f32 * scale_y) as u32;
+                let end_y = ((y + 1) as f32 * scale_y) as u32;
 
-                    for surface_y in start_y..end_y.min(self.window_size.1) {
-                        for surface_x in start_x..end_x.min(self.window_size.0) {
-                            // Flip Y coordinate for surface
-                            let real_y = self.window_size.1 - 1 - surface_y;
-                            let index = (real_y * self.window_size.0 + surface_x) as usize;
+                let argb_color = color.to_argb();
 
-                            if index < buffer.len() {
-                                buffer[index] = argb_color;
-                            }
+                for surface_y in start_y..end_y.min(self.window_size.1) {
+                    for surface_x in start_x..end_x.min(self.window_size.0) {
+                        // Flip Y coordinate for surface
+                        let real_y = self.window_size.1 - 1 - surface_y;
+                        let index = (real_y * self.window_size.0 + surface_x) as usize;
+
+                        if index < buffer.len() {
+                            buffer[index] = argb_color;
                         }
                     }
                 }
@@ -92,23 +94,41 @@ impl SoftwareCanvas {
     }
 
     pub fn draw_line(&mut self, x1: u32, y1: u32, x2: u32, y2: u32, color: Vec4) {
-        if x1 == x2 {
-            let start_y = y1.min(y2);
-            let end_y = y1.max(y2);
-            for y in start_y..=end_y {
-                self.set_pixel(x1, y, color);
-            }
-        } else if x1 < x2 {
-            for x in x1..=x2 {
-                let t = (x - x1) as f32 / (x2 - x1) as f32;
-                let y = (y1 as f32 + (y2 - y1) as f32 * t).round() as u32;
-                self.set_pixel(x, y, color);
-            }
-        } else {
-            for x in x2..=x1 {
-                let t = (x - x2) as f32 / (x1 - x2) as f32;
-                let y = (y2 as f32 + (y1 - y2) as f32 * t).round() as u32;
-                self.set_pixel(x, y, color);
+        // Simple Bresenham-like line drawing for testing debugging
+        let steep = (x1 as i32 - x2 as i32).abs() < (y1 as i32 - y2 as i32).abs();
+        let (mut start_x, mut start_y, mut end_x, mut end_y) = (x1, y1, x2, y2);
+        if steep {
+            std::mem::swap(&mut start_x, &mut start_y);
+            std::mem::swap(&mut end_x, &mut end_y);
+        }
+        if start_x > end_x {
+            std::mem::swap(&mut start_x, &mut end_x);
+            std::mem::swap(&mut start_y, &mut end_y);
+        }
+
+        let dx = end_x - start_x;
+        let dy = if end_y > start_y { end_y - start_y } else { start_y - end_y };
+        
+        for x in start_x..=end_x {
+            let progress = if dx > 0 { (x - start_x) as f32 / dx as f32 } else { 0.0 };
+            let y = if end_y > start_y {
+                (start_y as f32 + dy as f32 * progress).round() as u32
+            } else {
+                (start_y as f32 - dy as f32 * progress).round() as u32
+            };
+
+            // Debug variables that should be visible in debugger
+            let debug_x = x;
+            let debug_y = y;
+            let debug_progress = progress;
+            let debug_color = color;
+            
+            println!("Drawing pixel at ({}, {}) with progress {:.2}", debug_x, debug_y, debug_progress);
+
+            if steep {
+                self.set_pixel(debug_y, debug_x, debug_color);
+            } else {
+                self.set_pixel(debug_x, debug_y, debug_color);
             }
         }
     }
@@ -123,9 +143,6 @@ impl SoftwareCanvas {
         let (cx, cy) = (62, 53);
 
         self.draw_line(ax, ay, bx, by, Vec4::blue());
-        self.draw_line(cx, cy, bx, by, Vec4::green());
-        self.draw_line(cx, cy, ax, ay, Vec4::yellow());
-        self.draw_line(ax, ay, cx, cy, Vec4::red());
     }
 
     pub fn width(&self) -> u32 {
@@ -158,7 +175,7 @@ impl SoftwareCanvas {
         Ok(())
     }
 
-    pub fn present_frame(&mut self, _window: &Window) -> Result<()> {
+    pub fn present_frame(&mut self) -> Result<()> {
         if let Some(surface) = &mut self.surface {
             let buffer = surface.buffer_mut().expect("Failed to get surface buffer");
             buffer.present().expect("Failed to present buffer");

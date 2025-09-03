@@ -17,16 +17,39 @@
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_BACKTRACE": "1"
+            },
+            "console": "integratedTerminal",
+            "sourceLanguages": ["rust"]
+        },
+        {
+            "name": "Debug with rust-analyzer",
+            "type": "lldb",
+            "request": "launch", 
+            "program": "${workspaceFolder}/target/debug/salmon_rs",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_BACKTRACE": "1"
+            },
+            "console": "integratedTerminal",
+            "sourceLanguages": ["rust"],
+            "preLaunchTask": {
+                "type": "cargo", 
+                "command": "build",
+                "args": ["--bin", "salmon_rs"]
+            }
         },
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'salmon_rs'",
+            "name": "Debug unit tests",
             "cargo": {
                 "args": [
                     "test",
-                    "--no-run",
+                    "--no-run", 
                     "--bin=salmon_rs",
                     "--package=salmon_rs"
                 ],
@@ -36,7 +59,12 @@
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_BACKTRACE": "1"
+            },
+            "console": "integratedTerminal",
+            "sourceLanguages": ["rust"]
         }
     ]
 }

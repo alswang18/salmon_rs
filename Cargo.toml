@@ -7,3 +7,13 @@ edition = "2024"
 winit = "0.30"
 softbuffer = "0.4"
 anyhow = "1.0"
+
+[profile.dev]
+opt-level = 0
+debug = true
+debug-assertions = true
+overflow-checks = true
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 256

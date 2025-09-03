@@ -133,7 +133,7 @@ impl App {
             self.canvas.render_frame();
 
             // Present the frame
-            if let Err(e) = self.canvas.present_frame(&window) {
+            if let Err(e) = self.canvas.present_frame() {
                 println!("Failed to present frame: {}", e);
             }
         }
